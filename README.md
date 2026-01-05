@@ -2,7 +2,7 @@
 
 ## Session 記錄
 ```
-# 可記錄常用指令或 session ID
+codex resume 019b8bc1-a44a-7b63-beca-e63b74eb25e8
 ```
 
 ## 目的
