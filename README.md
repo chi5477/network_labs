@@ -10,6 +10,7 @@
 
 ## 實驗總覽
 - `01-dns-basics`：使用 DuckDNS 建立子網域，設定 A record 並驗證透過網域存取 HTTP 服務（Lab 01）
+- `02-http-to-https`：使用 Nginx 與 Let’s Encrypt 將 HTTP 升級為 HTTPS（Lab 02）
 
 ## 共通前置條件
 - 可操作的 Ubuntu on GCE 執行環境
