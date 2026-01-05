@@ -23,10 +23,10 @@ sudo apt update
 sudo apt install -y nginx certbot python3-certbot-nginx
 ```
 
-2. 啟動並設定 Nginx：
+2. 啟動 Nginx（本實驗不設定開機自動啟動）：
 
 ```bash
-sudo systemctl enable --now nginx
+sudo systemctl start nginx
 ```
 
 3. 建立簡單測試頁：
@@ -45,6 +45,19 @@ curl -I http://chi-networklabs.duckdns.org
 
 ### 成功判斷
 - `curl` 回傳 HTTP 狀態碼（例如 200）。
+- 範例回應：
+
+```
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Mon, 05 Jan 2026 09:07:35 GMT
+Content-Type: text/html
+Content-Length: 3
+Last-Modified: Mon, 05 Jan 2026 09:06:57 GMT
+Connection: keep-alive
+ETag: "695b7f31-3"
+Accept-Ranges: bytes
+```
 
 ## 實驗 2.2：使用 ACME（Let’s Encrypt）申請憑證
 ### 目的
@@ -62,6 +75,11 @@ sudo certbot --nginx -d chi-networklabs.duckdns.org
 ```
 
 請將 `chi-networklabs` 替換成你自己的子網域。
+
+### 指令說明
+- `--nginx`：使用 Nginx 外掛，讓 certbot 直接修改 Nginx 設定並完成部署。
+- `-d`：指定要申請憑證的網域名稱（可重複使用多次）。
+- 轉向行為：`--redirect` 預設為啟用（install/run 時會自動加入 HTTP → HTTPS 轉向），可用 `--no-redirect` 關閉。
 
 ### 成功判斷
 - certbot 顯示憑證申請成功，並提示已更新 Nginx 設定。
@@ -83,42 +101,70 @@ curl -I https://chi-networklabs.duckdns.org
 2. 檢查憑證資訊（選用）：
 
 ```bash
-echo | openssl s_client -servername chi-networklabs.duckdns.org -connect chi-networklabs.duckdns.org:443 \
-  | openssl x509 -noout -issuer -subject -dates
+echo | openssl s_client -servername chi-networklabs.duckdns.org -connect chi-networklabs.duckdns.org:443 | openssl x509 -noout -issuer -subject -dates
 ```
 
 請將 `chi-networklabs` 替換成你自己的子網域。
 
 ### 成功判斷
 - `curl` 回傳 200 或 3xx（視 Nginx 設定）。
-- openssl 可看到 Let’s Encrypt 的簽發資訊。
+- 範例回應：
 
-## 實驗 2.4：將 HTTP 強制轉向 HTTPS
-### 目的
-確保所有 HTTP 請求導向 HTTPS。
-
-### 前置需求
-- HTTPS 已可正常連線
-
-### 步驟
-1. 如果在 certbot 流程中已選擇「Redirect」，可直接跳到驗證。
-2. 若未選擇，請在 Nginx HTTP server block 中加入轉向設定，並重新載入：
-
-```bash
-sudo nginx -t
-sudo systemctl reload nginx
+```
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Mon, 05 Jan 2026 09:15:22 GMT
+Content-Type: text/html
+Content-Length: 3
+Last-Modified: Mon, 05 Jan 2026 09:06:57 GMT
+Connection: keep-alive
+ETag: "695b7f31-3"
+Accept-Ranges: bytes
 ```
 
-3. 驗證轉向：
+- openssl 可看到 Let’s Encrypt 的簽發資訊。
+- 範例回應：
+
+```
+depth=2 C = US, O = Internet Security Research Group, CN = ISRG Root X1
+verify return:1
+depth=1 C = US, O = Let's Encrypt, CN = E7
+verify return:1
+depth=0 CN = chi-networklabs.duckdns.org
+verify return:1
+DONE
+issuer=C = US, O = Let's Encrypt, CN = E7
+subject=CN = chi-networklabs.duckdns.org
+notBefore=Jan  5 08:15:42 2026 GMT
+notAfter=Apr  5 08:15:41 2026 GMT
+```
+
+### 轉向驗證（HTTP → HTTPS）
+本實驗使用 `sudo certbot --nginx -d <your-subdomain>.duckdns.org` 時，已自動寫入轉向設定；以下只需驗證是否成功。
+
+1. 驗證 HTTP 是否已轉向：
 
 ```bash
 curl -I http://chi-networklabs.duckdns.org
 ```
 
-### 成功判斷
-- `curl` 顯示 301 或 308，並含有 `Location: https://...`。
+請將 `chi-networklabs` 替換成你自己的子網域。
+
+### 轉向成功判斷
+- 回應為 301 或 308，且包含 `Location: https://...`。
+- 範例回應：
+
+```
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.24.0 (Ubuntu)
+Date: Mon, 05 Jan 2026 09:27:33 GMT
+Content-Type: text/html
+Content-Length: 178
+Connection: keep-alive
+Location: https://chi-networklabs.duckdns.org/
+```
 
 ## 失敗排查
 - ACME 驗證失敗：確認 80 對外可達、DNS 解析正確。
 - HTTPS 連線失敗：確認 443 防火牆、Nginx 是否載入憑證設定。
-- 轉向未生效：確認 Nginx 設定是否已 reload。
+- 轉向未生效：確認是否已有轉向設定（HTTP 回應應為 301/308 並包含 `Location: https://...`）。
