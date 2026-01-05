@@ -16,7 +16,9 @@
 
 ### 步驟
 1. 登入 DuckDNS。
-2. 新增一個子網域名稱，例如：`<your-subdomain>.duckdns.org`。
+2. 新增一個子網域名稱，例如：`chi-networklabs.duckdns.org`（請替換成你自己的子網域）。
+
+![DuckDNS add domain and update IP](./duckdns-domain-ip-steps.png)
 
 ### 成功判斷
 - DuckDNS 顯示子網域已建立。
@@ -42,8 +44,9 @@ curl -4 ifconfig.me
 - 使用 `dig` 或 `nslookup` 可查到 A record 指向預期 IP。
 
 ```bash
-dig +short <your-subdomain>.duckdns.org
+dig +short chi-networklabs.duckdns.org
 ```
+請將 `chi-networklabs` 替換成你自己的子網域。
 
 ## 實驗 1.3：透過網域驗證 HTTP 存取
 ### 目的
@@ -63,11 +66,29 @@ sudo python3 -m http.server 80
 2. 從本機驗證：
 
 ```bash
-curl -I http://<your-subdomain>.duckdns.org
+curl -I http://chi-networklabs.duckdns.org
 ```
+請將 `chi-networklabs` 替換成你自己的子網域。
 
 ### 成功判斷
 - `curl` 回傳 HTTP 狀態碼（例如 200）。
+- 範例回應：
+
+```
+HTTP/1.0 200 OK
+Server: SimpleHTTP/0.6 Python/3.12.3
+Date: Mon, 05 Jan 2026 02:37:28 GMT
+Content-type: text/html; charset=utf-8
+Content-Length: 361
+```
+
+### 注意
+- 測試完成後請關閉服務（在執行視窗按 `Ctrl + C`）。
+- 或改用限時啟動（例如 10 分鐘後自動關閉）：
+
+```bash
+sudo timeout 10m python3 -m http.server 80
+```
 
 ## 失敗排查
 - DNS 尚未生效：等待 TTL 或清除本機 DNS 快取。
