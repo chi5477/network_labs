@@ -59,6 +59,13 @@ ETag: "695b7f31-3"
 Accept-Ranges: bytes
 ```
 
+### 注意
+- 測試完成後請關閉 Nginx，避免留下不必要的對外服務。
+
+```bash
+sudo systemctl stop nginx
+```
+
 ## 實驗 2.2：使用 ACME（Let’s Encrypt）申請憑證
 ### 目的
 透過 ACME 驗證取得 HTTPS 憑證。
